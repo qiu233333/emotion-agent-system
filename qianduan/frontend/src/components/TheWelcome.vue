@@ -1,4 +1,9 @@
 <script setup lang="ts">
+/**
+ * Vue 模板欢迎内容组件。
+ *
+ * 该组件来自 Vite 默认模板，用于展示 Vue 生态、工具链和社区链接。
+ */
 import WelcomeItem from './WelcomeItem.vue'
 import DocumentationIcon from './icons/IconDocumentation.vue'
 import ToolingIcon from './icons/IconTooling.vue'
@@ -6,10 +11,16 @@ import EcosystemIcon from './icons/IconEcosystem.vue'
 import CommunityIcon from './icons/IconCommunity.vue'
 import SupportIcon from './icons/IconSupport.vue'
 
+/**
+ * 打开 README.md 的辅助方法。
+ *
+ * Vite 开发服务器支持 /__open-in-editor 接口，点击后会尝试在编辑器中打开指定文件。
+ */
 const openReadmeInEditor = () => fetch('/__open-in-editor?file=README.md')
 </script>
 
 <template>
+  <!-- 文档入口模块。 -->
   <WelcomeItem>
     <template #icon>
       <DocumentationIcon />
@@ -21,6 +32,7 @@ const openReadmeInEditor = () => fetch('/__open-in-editor?file=README.md')
     provides you with all information you need to get started.
   </WelcomeItem>
 
+  <!-- 工具链介绍模块。 -->
   <WelcomeItem>
     <template #icon>
       <ToolingIcon />
@@ -48,6 +60,7 @@ const openReadmeInEditor = () => fetch('/__open-in-editor?file=README.md')
     >.
   </WelcomeItem>
 
+  <!-- Vue 生态资源模块。 -->
   <WelcomeItem>
     <template #icon>
       <EcosystemIcon />
@@ -64,6 +77,7 @@ const openReadmeInEditor = () => fetch('/__open-in-editor?file=README.md')
     a visit.
   </WelcomeItem>
 
+  <!-- 社区求助和资讯模块。 -->
   <WelcomeItem>
     <template #icon>
       <CommunityIcon />
@@ -82,6 +96,7 @@ const openReadmeInEditor = () => fetch('/__open-in-editor?file=README.md')
     X account for latest news in the Vue world.
   </WelcomeItem>
 
+  <!-- Vue 赞助支持模块。 -->
   <WelcomeItem>
     <template #icon>
       <SupportIcon />

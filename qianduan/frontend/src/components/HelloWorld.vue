@@ -1,10 +1,17 @@
 <script setup lang="ts">
+/**
+ * Vue 模板欢迎标题组件。
+ *
+ * 该组件来自 Vite 默认模板，用于展示一段标题文字。
+ */
 defineProps<{
+  /** 页面主标题文本。 */
   msg: string
 }>()
 </script>
 
 <template>
+  <!-- 欢迎标题和 Vite/Vue 链接说明。 -->
   <div class="greetings">
     <h1 class="green">{{ msg }}</h1>
     <h3>

@@ -1,4 +1,8 @@
 <template>
+  <!--
+    通用欢迎条目组件。
+    icon 插槽放图标，heading 插槽放标题，默认插槽放正文内容。
+  -->
   <div class="item">
     <i>
       <slot name="icon"></slot>

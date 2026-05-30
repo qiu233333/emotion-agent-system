@@ -1,3 +1,5 @@
+/* 基础样式模块：定义项目通用颜色、排版和浏览器默认样式重置。 */
+
 /* color palette from <https://github.com/vuejs/theme> */
 :root {
   --vt-c-white: #ffffff;
@@ -21,7 +23,7 @@
   --vt-c-text-dark-2: rgba(235, 235, 235, 0.64);
 }
 
-/* semantic color variables for this project */
+/* 项目语义化颜色变量，组件样式优先使用这些变量而不是直接写死颜色。 */
 :root {
   --color-background: var(--vt-c-white);
   --color-background-soft: var(--vt-c-white-soft);
@@ -37,6 +39,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
+  /* 跟随系统深色模式自动切换颜色变量。 */
   :root {
     --color-background: var(--vt-c-black);
     --color-background-soft: var(--vt-c-black-soft);
@@ -53,12 +56,14 @@
 *,
 *::before,
 *::after {
+  /* 统一盒模型，减少不同浏览器默认样式带来的布局差异。 */
   box-sizing: border-box;
   margin: 0;
   font-weight: normal;
 }
 
 body {
+  /* 全局字体和基础文本渲染配置。 */
   min-height: 100vh;
   color: var(--color-text);
   background: var(--color-background);
