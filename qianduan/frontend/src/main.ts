@@ -13,5 +13,8 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 
+<<<<<<< HEAD
 // 创建 Vue 应用，注册全局插件，再挂载根组件。
+=======
+>>>>>>> c12f37e6a94c8b1bb7c85f65a53ba557c69edd43
 createApp(App).use(router).use(ElementPlus).mount('#app')

@@ -1,15 +1,19 @@
 <script setup lang="ts">
+<<<<<<< HEAD
 /**
  * 系统基础布局组件。
  *
  * 页面采用“顶部标题 + 左侧菜单 + 右侧内容区”的后台管理布局。
  * 左侧菜单点击后由 Vue Router 切换右侧 RouterView 中的页面内容。
  */
+=======
+>>>>>>> c12f37e6a94c8b1bb7c85f65a53ba557c69edd43
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
 
+<<<<<<< HEAD
 // 当前激活菜单项，和浏览器地址路径保持一致。
 const activePath = computed(() => route.path)
 
@@ -18,6 +22,10 @@ const activePath = computed(() => route.path)
  *
  * path 对应路由路径，label 对应菜单展示文字。
  */
+=======
+const activePath = computed(() => route.path)
+
+>>>>>>> c12f37e6a94c8b1bb7c85f65a53ba557c69edd43
 const menuItems = [
   { path: '/login', label: '登录页' },
   { path: '/register', label: '注册页' },
@@ -31,9 +39,13 @@ const menuItems = [
 </script>
 
 <template>
+<<<<<<< HEAD
   <!-- Element Plus 容器布局：最外层控制整个应用的高度和背景。 -->
   <el-container class="app-shell">
     <!-- 顶部标题栏：展示系统名称和当前技术栈提示。 -->
+=======
+  <el-container class="app-shell">
+>>>>>>> c12f37e6a94c8b1bb7c85f65a53ba557c69edd43
     <el-header class="app-header">
       <div>
         <h1>情绪记录与管理智能体系统</h1>
@@ -42,7 +54,10 @@ const menuItems = [
     </el-header>
 
     <el-container class="app-body">
+<<<<<<< HEAD
       <!-- 左侧菜单：router 模式会在点击菜单时自动调用路由跳转。 -->
+=======
+>>>>>>> c12f37e6a94c8b1bb7c85f65a53ba557c69edd43
       <el-aside class="app-aside" width="220px">
         <el-menu :default-active="activePath" router class="side-menu">
           <el-menu-item v-for="item in menuItems" :key="item.path" :index="item.path">
@@ -51,7 +66,10 @@ const menuItems = [
         </el-menu>
       </el-aside>
 
+<<<<<<< HEAD
       <!-- 右侧内容区：当前路由命中的页面会渲染到这里。 -->
+=======
+>>>>>>> c12f37e6a94c8b1bb7c85f65a53ba557c69edd43
       <el-main class="app-main">
         <RouterView />
       </el-main>
@@ -60,13 +78,19 @@ const menuItems = [
 </template>
 
 <style scoped>
+<<<<<<< HEAD
 /* 应用外壳：占满整个浏览器窗口。 */
+=======
+>>>>>>> c12f37e6a94c8b1bb7c85f65a53ba557c69edd43
 .app-shell {
   min-height: 100vh;
   background: #f5f7fb;
 }
 
+<<<<<<< HEAD
 /* 顶部标题栏：固定高度并使用白色背景，和内容区形成层级。 */
+=======
+>>>>>>> c12f37e6a94c8b1bb7c85f65a53ba557c69edd43
 .app-header {
   display: flex;
   align-items: center;
@@ -89,12 +113,18 @@ const menuItems = [
   font-size: 12px;
 }
 
+<<<<<<< HEAD
 /* 主体区域高度等于视口高度减去顶部标题栏高度。 */
+=======
+>>>>>>> c12f37e6a94c8b1bb7c85f65a53ba557c69edd43
 .app-body {
   min-height: calc(100vh - 64px);
 }
 
+<<<<<<< HEAD
 /* 左侧菜单栏：白色背景和右侧内容区分隔。 */
+=======
+>>>>>>> c12f37e6a94c8b1bb7c85f65a53ba557c69edd43
 .app-aside {
   border-right: 1px solid #e5e7eb;
   background: #ffffff;
@@ -105,7 +135,10 @@ const menuItems = [
   border-right: 0;
 }
 
+<<<<<<< HEAD
 /* 右侧内容区：给页面卡片留出统一内边距。 */
+=======
+>>>>>>> c12f37e6a94c8b1bb7c85f65a53ba557c69edd43
 .app-main {
   padding: 24px;
   background: #f5f7fb;

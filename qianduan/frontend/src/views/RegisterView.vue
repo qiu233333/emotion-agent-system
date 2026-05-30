@@ -1,5 +1,8 @@
 <template>
+<<<<<<< HEAD
   <!-- 注册页：展示用户注册需要填写的基础字段。 -->
+=======
+>>>>>>> c12f37e6a94c8b1bb7c85f65a53ba557c69edd43
   <el-card class="page-card">
     <h2 class="page-title">注册页</h2>
     <p class="page-description">用于新用户创建账号。当前页面只展示基础表单结构，不提交数据。</p>
@@ -23,7 +26,10 @@
 </template>
 
 <style scoped>
+<<<<<<< HEAD
 /* 表单预览区域：和登录页保持一致的宽度与间距。 */
+=======
+>>>>>>> c12f37e6a94c8b1bb7c85f65a53ba557c69edd43
 .form-preview {
   max-width: 420px;
   margin-top: 24px;
