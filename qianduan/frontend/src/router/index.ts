@@ -1,12 +1,9 @@
-<<<<<<< HEAD
 /**
  * 前端路由模块。
  *
  * 这里集中配置系统全部页面路径。页面访问时，Vue Router 会根据 URL
  * 找到对应组件，并渲染到布局组件中的 RouterView 区域。
  */
-=======
->>>>>>> c12f37e6a94c8b1bb7c85f65a53ba557c69edd43
 import { createRouter, createWebHistory } from 'vue-router'
 
 import AppLayout from '@/layouts/AppLayout.vue'
@@ -19,14 +16,11 @@ import LoginView from '@/views/LoginView.vue'
 import RegisterView from '@/views/RegisterView.vue'
 import StatisticsView from '@/views/StatisticsView.vue'
 
-<<<<<<< HEAD
 /**
  * 业务页面路由表。
  *
  * path 是浏览器地址栏路径，component 是路径命中后展示的页面组件。
  */
-=======
->>>>>>> c12f37e6a94c8b1bb7c85f65a53ba557c69edd43
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [

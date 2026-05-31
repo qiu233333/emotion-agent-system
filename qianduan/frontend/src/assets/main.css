@@ -1,6 +1,5 @@
 @import './base.css';
 
-<<<<<<< HEAD
 /* 全局布局模块：让应用占满浏览器窗口，适合后台管理系统布局。 */
 html,
 body,
@@ -31,54 +30,17 @@ body {
 }
 
 /* 全局链接样式：避免浏览器默认下划线影响菜单和页面文本。 */
-=======
-* {
-  box-sizing: border-box;
-}
-
-html,
-body,
-#app {
-  min-height: 100vh;
-}
-
-body {
-  margin: 0;
-  background: #f5f7fb;
-  color: #1f2937;
-  font-family:
-    Inter,
-    "PingFang SC",
-    "Microsoft YaHei",
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
-}
-
-#app {
-  font-weight: normal;
-}
-
->>>>>>> c12f37e6a94c8b1bb7c85f65a53ba557c69edd43
 a {
   text-decoration: none;
   color: inherit;
 }
 
-<<<<<<< HEAD
 /* 页面内容卡片：各业务页面复用这一基础样式。 */
-=======
->>>>>>> c12f37e6a94c8b1bb7c85f65a53ba557c69edd43
 .page-card {
   border-radius: 8px;
 }
 
-<<<<<<< HEAD
 /* 页面标题：用于 views 目录下的静态页面标题。 */
-=======
->>>>>>> c12f37e6a94c8b1bb7c85f65a53ba557c69edd43
 .page-title {
   margin: 0 0 10px;
   color: #111827;
@@ -86,10 +48,7 @@ a {
   line-height: 1.3;
 }
 
-<<<<<<< HEAD
 /* 页面说明文字：用于解释当前页面后续承载的业务功能。 */
-=======
->>>>>>> c12f37e6a94c8b1bb7c85f65a53ba557c69edd43
 .page-description {
   margin: 0;
   color: #6b7280;
