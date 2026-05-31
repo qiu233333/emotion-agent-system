@@ -65,9 +65,9 @@ INSERT INTO `user` (
   create_time,
   update_time
 ) VALUES
-('admin', '123456', '系统管理员', NULL, 'admin@example.com', 'admin', 1, '2026-05-30 09:00:00', '2026-05-30 09:00:00'),
-('alice', '123456', '小爱', NULL, 'alice@example.com', 'user', 1, '2026-05-30 09:10:00', '2026-05-30 09:10:00'),
-('bob', '123456', '小博', NULL, 'bob@example.com', 'user', 1, '2026-05-30 09:20:00', '2026-05-30 09:20:00');
+('admin', '$2a$10$eXAxIgk5vxKKgIVTTDpud.sBLX4GcDyGjvVhAq0q7rz2ISYPNcLJm', '系统管理员', NULL, 'admin@example.com', 'admin', 1, '2026-05-30 09:00:00', '2026-05-30 09:00:00'),
+('alice', '$2a$10$eXAxIgk5vxKKgIVTTDpud.sBLX4GcDyGjvVhAq0q7rz2ISYPNcLJm', '小爱', NULL, 'alice@example.com', 'user', 1, '2026-05-30 09:10:00', '2026-05-30 09:10:00'),
+('bob', '$2a$10$eXAxIgk5vxKKgIVTTDpud.sBLX4GcDyGjvVhAq0q7rz2ISYPNcLJm', '小博', NULL, 'bob@example.com', 'user', 1, '2026-05-30 09:20:00', '2026-05-30 09:20:00');
 
 INSERT INTO emotion_diary (
   user_id,

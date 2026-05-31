@@ -6,12 +6,28 @@
  * 左侧菜单点击后由 Vue Router 切换右侧 RouterView 中的页面内容。
  */
 import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
+const router = useRouter()
 
 // 当前激活菜单项，和浏览器地址路径保持一致。
 const activePath = computed(() => route.path)
+
+// 当前登录用户展示名，从登录成功后保存的 userInfo 中读取。
+const currentUserName = computed(() => {
+  const userInfoText = localStorage.getItem('userInfo')
+  if (!userInfoText) {
+    return '已登录用户'
+  }
+
+  try {
+    const userInfo = JSON.parse(userInfoText)
+    return userInfo.nickname || userInfo.username || '已登录用户'
+  } catch (error) {
+    return '已登录用户'
+  }
+})
 
 /**
  * 左侧菜单配置。
@@ -19,8 +35,6 @@ const activePath = computed(() => route.path)
  * path 对应路由路径，label 对应菜单展示文字。
  */
 const menuItems = [
-  { path: '/login', label: '登录页' },
-  { path: '/register', label: '注册页' },
   { path: '/dashboard', label: '首页' },
   { path: '/diary', label: '情绪日记' },
   { path: '/history', label: '历史记录' },
@@ -28,6 +42,17 @@ const menuItems = [
   { path: '/statistics', label: '情绪统计' },
   { path: '/admin', label: '后台管理' },
 ]
+
+/**
+ * 退出登录。
+ *
+ * 清除本地保存的 token 和用户信息，并回到登录页。
+ */
+function logout() {
+  localStorage.removeItem('token')
+  localStorage.removeItem('userInfo')
+  router.push('/login')
+}
 </script>
 
 <template>
@@ -38,6 +63,11 @@ const menuItems = [
       <div>
         <h1>情绪记录与管理智能体系统</h1>
         <span>Vue 3 + Vue Router + Element Plus</span>
+      </div>
+
+      <div class="header-user">
+        <span>{{ currentUserName }}</span>
+        <el-button size="small" @click="logout">退出登录</el-button>
       </div>
     </el-header>
 
@@ -70,6 +100,7 @@ const menuItems = [
 .app-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   height: 64px;
   border-bottom: 1px solid #e5e7eb;
   background: #ffffff;
@@ -87,6 +118,20 @@ const menuItems = [
   margin-top: 4px;
   color: #6b7280;
   font-size: 12px;
+}
+
+/* 顶部右侧用户区域：显示当前用户和退出按钮。 */
+.header-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #374151;
+  font-size: 14px;
+}
+
+.header-user span {
+  margin-top: 0;
+  font-size: 14px;
 }
 
 /* 主体区域高度等于视口高度减去顶部标题栏高度。 */

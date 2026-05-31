@@ -17,3 +17,7 @@ spring:
 mybatis:
   mapper-locations: classpath:mapper/*.xml
   type-aliases-package: com.bishe.backend.entity
+
+jwt:
+  secret: bishe-emotion-system-secret-key-change-me-2026
+  expire-hours: 24

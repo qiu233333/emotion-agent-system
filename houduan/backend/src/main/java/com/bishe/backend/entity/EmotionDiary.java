@@ -25,7 +25,7 @@ public class EmotionDiary {
     private Long id;
 
     /**
-     * 日记所属用户 ID。当前阶段暂时在业务层固定为 1。
+     * 日记所属用户 ID。登录后由后端从 JWT 中解析当前用户并自动写入。
      */
     private Long userId;
 

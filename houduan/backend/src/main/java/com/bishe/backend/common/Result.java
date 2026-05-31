@@ -61,8 +61,20 @@ public class Result<T> {
      * @return 失败结果
      */
     public static <T> Result<T> error(String message) {
+        return error(500, message);
+    }
+
+    /**
+     * 创建一个可指定业务状态码的失败返回对象。
+     *
+     * @param code 业务状态码，例如 401 表示未登录或 token 无效
+     * @param message 失败提示信息
+     * @param <T> data 字段的数据类型
+     * @return 失败结果
+     */
+    public static <T> Result<T> error(Integer code, String message) {
         Result<T> result = new Result<>();
-        result.setCode(500);
+        result.setCode(code);
         result.setMessage(message);
         result.setData(null);
         return result;

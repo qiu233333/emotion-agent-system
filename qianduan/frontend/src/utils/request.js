@@ -41,10 +41,23 @@ request.interceptors.request.use(
  *
  * 后端统一返回 Result 对象时，response.data 就是 { code, message, data }。
  * 这里统一返回 response.data，页面和 API 调用方不用再手动取 response.data。
+ * 如果后端返回 401，说明 token 缺失或失效，前端会清理登录状态并跳转登录页。
  */
 request.interceptors.response.use(
   (response) => response.data,
-  (error) => Promise.reject(error),
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token')
+      localStorage.removeItem('userInfo')
+
+      if (window.location.pathname !== '/login') {
+        const redirect = encodeURIComponent(window.location.pathname + window.location.search)
+        window.location.href = `/login?redirect=${redirect}`
+      }
+    }
+
+    return Promise.reject(error)
+  },
 )
 
 export default request
