@@ -89,22 +89,32 @@ public class LLMServiceImpl implements LLMService {
      * 生成 AI 陪伴对话回复。
      *
      * @param request 陪伴对话请求参数
+     * @param diaryContext 后端整理好的当前用户日记上下文
      * @return 大语言模型生成的回复文本
      */
     @Override
-    public String chat(AiChatRequest request) {
+    public String chat(AiChatRequest request, String diaryContext) {
         if (request == null || !StringUtils.hasText(request.getMessage())) {
             throw new IllegalArgumentException("请输入想和 AI 聊的内容");
         }
 
         String userPrompt = """
                 用户正在和你进行情绪陪伴对话。
-                用户说：%s
+
+                请结合以下用户情绪日记上下文进行陪伴回复。
+                上下文只用于理解用户今天和近期的状态，不要逐字复述日记，不要提到数据库或系统实现。
+                如果上下文为空或没有日记，就只根据用户当前消息回复。
+
+                【用户情绪日记上下文】
+                %s
+
+                【用户当前消息】
+                %s
 
                 请给出温和简短的回应，先共情，再给一个很小、可执行的下一步建议。
-                """.formatted(request.getMessage());
+                """.formatted(defaultText(diaryContext, "暂无可用日记上下文。"), request.getMessage());
 
-        return callChatCompletions(userPrompt, 0.8, 400);
+        return callChatCompletions(userPrompt, 0.8, 600);
     }
 
     /**

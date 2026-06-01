@@ -6,9 +6,11 @@ import com.bishe.backend.dto.AiChatResponse;
 import com.bishe.backend.dto.AiSuggestionRequest;
 import com.bishe.backend.dto.AiSuggestionResponse;
 import com.bishe.backend.entity.EmotionDiary;
+import com.bishe.backend.service.DiaryContextService;
 import com.bishe.backend.service.EmotionDiaryService;
 import com.bishe.backend.service.LLMService;
 import jakarta.annotation.Resource;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,6 +37,12 @@ public class AiController {
      */
     @Resource
     private EmotionDiaryService emotionDiaryService;
+
+    /**
+     * 日记上下文业务对象，用于为 AI 陪伴对话补充今日和近期日记信息。
+     */
+    @Resource
+    private DiaryContextService diaryContextService;
 
     /**
      * 生成情绪建议接口。
@@ -68,11 +76,24 @@ public class AiController {
     @PostMapping("/chat")
     public Result<AiChatResponse> chat(@RequestBody AiChatRequest request) {
         try {
+            validateChatRequest(request);
+            String diaryContext = diaryContextService.buildCurrentUserChatContext();
             AiChatResponse response = new AiChatResponse();
-            response.setReply(llmService.chat(request));
+            response.setReply(llmService.chat(request, diaryContext));
             return Result.success(response);
         } catch (IllegalArgumentException | IllegalStateException e) {
             return Result.error(e.getMessage());
+        }
+    }
+
+    /**
+     * 校验 AI 陪伴对话请求，避免空消息继续查询上下文和调用模型。
+     *
+     * @param request 陪伴对话请求参数
+     */
+    private void validateChatRequest(AiChatRequest request) {
+        if (request == null || !StringUtils.hasText(request.getMessage())) {
+            throw new IllegalArgumentException("请输入想和 AI 聊的内容");
         }
     }
 

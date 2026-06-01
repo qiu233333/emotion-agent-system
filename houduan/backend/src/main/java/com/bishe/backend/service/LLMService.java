@@ -23,7 +23,8 @@ public interface LLMService {
      * 生成 AI 陪伴对话回复。
      *
      * @param request 陪伴对话请求参数
+     * @param diaryContext 后端整理好的当前用户日记上下文
      * @return 大语言模型生成的回复文本
      */
-    String chat(AiChatRequest request);
+    String chat(AiChatRequest request, String diaryContext);
 }
