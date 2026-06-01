@@ -24,7 +24,7 @@ const currentUserName = computed(() => {
   try {
     const userInfo = JSON.parse(userInfoText)
     return userInfo.nickname || userInfo.username || '已登录用户'
-  } catch (error) {
+  } catch {
     return '已登录用户'
   }
 })
