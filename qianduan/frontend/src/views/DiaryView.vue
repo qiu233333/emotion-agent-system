@@ -5,11 +5,17 @@
  * 当前页面提供新增日记表单，用户填写标题、内容和心情标签后，
  * 点击提交会调用后端 POST /api/diary 接口保存数据。
  */
-import { reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 
 import { generateAiSuggestion } from '@/api/ai'
 import { addDiary } from '@/api/diary'
+import {
+  cleanupExpiredDiaryDrafts,
+  readTodayDiaryDraft,
+  removeTodayDiaryDraft,
+  saveTodayDiaryDraft,
+} from '@/utils/todayStorage'
 
 /**
  * 后端统一 Result 响应结构。
@@ -63,14 +69,58 @@ const savedDiary = ref<DiaryRecord | null>(null)
 const suggestionLoading = ref(false)
 
 /**
+ * 判断当前日记表单是否包含有效草稿内容。
+ *
+ * @returns 标题、内容或心情标签任意一项非空时返回 true
+ */
+function hasDiaryDraftContent() {
+  return Boolean(diaryForm.title.trim() || diaryForm.content.trim() || diaryForm.moodTag.trim())
+}
+
+/**
+ * 恢复当前用户今日未提交日记草稿。
+ *
+ * 页面进入时调用；如果本地没有今日草稿，则保持表单为空。
+ */
+function restoreTodayDiaryDraft() {
+  const draft = readTodayDiaryDraft()
+  if (!draft) {
+    return
+  }
+
+  diaryForm.title = draft.title || ''
+  diaryForm.content = draft.content || ''
+  diaryForm.moodTag = draft.moodTag || ''
+}
+
+/**
+ * 同步当前日记表单到今日草稿。
+ *
+ * 表单有内容时写入 localStorage；三项都为空时删除今日草稿。
+ */
+function syncTodayDiaryDraft() {
+  if (!hasDiaryDraftContent()) {
+    removeTodayDiaryDraft()
+    return
+  }
+
+  saveTodayDiaryDraft({
+    title: diaryForm.title,
+    content: diaryForm.content,
+    moodTag: diaryForm.moodTag,
+  })
+}
+
+/**
  * 清空日记表单。
  *
- * 保存成功后调用，方便用户继续新增下一篇日记。
+ * 同时删除当前用户今日未提交草稿，避免刷新或切换页面后恢复旧内容。
  */
 function resetDiaryForm() {
   diaryForm.title = ''
   diaryForm.content = ''
   diaryForm.moodTag = ''
+  removeTodayDiaryDraft()
 }
 
 /**
@@ -179,6 +229,25 @@ async function generateSuggestionForSavedDiary() {
     suggestionLoading.value = false
   }
 }
+
+/**
+ * 初始化今日草稿本地存储。
+ *
+ * 进入页面时先清理超过 7 天的旧草稿，再恢复当前用户当天草稿。
+ */
+onMounted(() => {
+  cleanupExpiredDiaryDrafts()
+  restoreTodayDiaryDraft()
+})
+
+/**
+ * 监听日记表单变化并自动保存今日草稿。
+ *
+ * 用户填写标题、内容或心情标签后，切换页面或刷新仍可恢复当天内容。
+ */
+watch(diaryForm, () => {
+  syncTodayDiaryDraft()
+})
 </script>
 
 <template>
