@@ -50,7 +50,7 @@ public class EmotionDiary {
     private String emotionPolarity;
 
     /**
-     * 情绪类型，例如开心、焦虑、悲伤、愤怒、平静。
+     * 情绪类型，例如开心、焦虑、悲伤、愤怒、疲惫、平静。
      */
     private String emotionType;
 

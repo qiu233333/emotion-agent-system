@@ -2,10 +2,13 @@ package com.bishe.backend.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.bishe.backend.dto.EmotionAnalyzeResult;
 import com.bishe.backend.entity.EmotionDiary;
 import com.bishe.backend.mapper.EmotionDiaryMapper;
 import com.bishe.backend.security.AuthContext;
+import com.bishe.backend.service.EmotionAnalyzeService;
 import com.bishe.backend.service.EmotionDiaryService;
+import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -20,6 +23,12 @@ import java.util.List;
 @Service
 public class EmotionDiaryServiceImpl extends ServiceImpl<EmotionDiaryMapper, EmotionDiary>
         implements EmotionDiaryService {
+
+    /**
+     * NLP 情绪分析业务对象，用于在保存日记前自动生成情绪分析结果。
+     */
+    @Resource
+    private EmotionAnalyzeService emotionAnalyzeService;
 
     /**
      * 新增一篇情绪日记，并补充当前登录用户 ID 和时间字段。
@@ -41,6 +50,7 @@ public class EmotionDiaryServiceImpl extends ServiceImpl<EmotionDiaryMapper, Emo
             diary.setDiaryDate(now);
         }
 
+        fillAnalyzeResult(diary);
         save(diary);
         return diary;
     }
@@ -98,6 +108,7 @@ public class EmotionDiaryServiceImpl extends ServiceImpl<EmotionDiaryMapper, Emo
             diary.setDiaryDate(oldDiary.getDiaryDate());
         }
 
+        fillAnalyzeResult(diary);
         updateById(diary);
         return getCurrentUserDiary(id);
     }
@@ -129,5 +140,19 @@ public class EmotionDiaryServiceImpl extends ServiceImpl<EmotionDiaryMapper, Emo
             throw new IllegalArgumentException("未登录，请先登录");
         }
         return currentUserId;
+    }
+
+    /**
+     * 根据日记正文自动填充 NLP 情绪分析结果。
+     *
+     * @param diary 待保存或待更新的日记实体
+     */
+    private void fillAnalyzeResult(EmotionDiary diary) {
+        EmotionAnalyzeResult analyzeResult = emotionAnalyzeService.analyze(diary.getContent());
+        diary.setEmotionPolarity(analyzeResult.getEmotionPolarity());
+        diary.setEmotionType(analyzeResult.getEmotionType());
+        diary.setEmotionScore(analyzeResult.getEmotionScore());
+        diary.setKeywords(analyzeResult.getKeywords());
+        diary.setAiSummary(analyzeResult.getAiSummary());
     }
 }
