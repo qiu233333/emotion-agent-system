@@ -52,4 +52,13 @@ public interface EmotionDiaryService extends IService<EmotionDiary> {
      * @return true 表示删除成功，false 表示数据不存在或删除失败
      */
     boolean deleteDiary(Long id);
+
+    /**
+     * 保存当前用户某篇日记的 AI 情绪建议。
+     *
+     * @param id 日记 ID
+     * @param aiSuggestion 大语言模型生成的情绪建议
+     * @return 更新后的日记数据，不存在或无权访问时返回 null
+     */
+    EmotionDiary saveAiSuggestion(Long id, String aiSuggestion);
 }

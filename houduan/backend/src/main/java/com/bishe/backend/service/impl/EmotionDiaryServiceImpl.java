@@ -130,6 +130,26 @@ public class EmotionDiaryServiceImpl extends ServiceImpl<EmotionDiaryMapper, Emo
     }
 
     /**
+     * 保存当前登录用户某篇日记的 AI 情绪建议。
+     *
+     * @param id 日记 ID
+     * @param aiSuggestion 大语言模型生成的情绪建议
+     * @return 更新后的日记数据，不存在或无权访问时返回 null
+     */
+    @Override
+    public EmotionDiary saveAiSuggestion(Long id, String aiSuggestion) {
+        EmotionDiary diary = getCurrentUserDiary(id);
+        if (diary == null) {
+            return null;
+        }
+
+        diary.setAiSuggestion(aiSuggestion);
+        diary.setUpdateTime(LocalDateTime.now());
+        updateById(diary);
+        return getCurrentUserDiary(id);
+    }
+
+    /**
      * 获取当前登录用户 ID。
      *
      * @return 当前登录用户 ID
