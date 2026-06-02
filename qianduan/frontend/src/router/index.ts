@@ -1,13 +1,17 @@
 /**
  * 前端路由模块。
  *
- * 这里集中配置系统全部页面路径。页面访问时，Vue Router 会根据 URL
- * 找到对应组件，并渲染到布局组件中的 RouterView 区域。
+ * 这里集中配置普通用户端和后台管理端的页面路径。后台管理端使用 /admin/**
+ * 独立路径、独立布局和独立登录状态，不再作为普通用户主页面的菜单模块。
  */
 import { createRouter, createWebHistory } from 'vue-router'
 
+import AdminLayout from '@/layouts/AdminLayout.vue'
 import AppLayout from '@/layouts/AppLayout.vue'
-import AdminView from '@/views/AdminView.vue'
+import AdminDashboardView from '@/views/admin/AdminDashboardView.vue'
+import AdminDiaryManageView from '@/views/admin/AdminDiaryManageView.vue'
+import AdminLoginView from '@/views/admin/AdminLoginView.vue'
+import AdminUserManageView from '@/views/admin/AdminUserManageView.vue'
 import ChatView from '@/views/ChatView.vue'
 import DashboardView from '@/views/DashboardView.vue'
 import DiaryView from '@/views/DiaryView.vue'
@@ -35,6 +39,38 @@ const router = createRouter({
       name: 'register',
       component: RegisterView,
       meta: { title: '注册页', public: true },
+    },
+    {
+      path: '/admin/login',
+      name: 'admin-login',
+      component: AdminLoginView,
+      meta: { title: '后台登录', adminPublic: true },
+    },
+    {
+      path: '/admin',
+      component: AdminLayout,
+      redirect: '/admin/dashboard',
+      meta: { title: '后台管理', adminRequired: true },
+      children: [
+        {
+          path: 'dashboard',
+          name: 'admin-dashboard',
+          component: AdminDashboardView,
+          meta: { title: '后台首页', adminRequired: true },
+        },
+        {
+          path: 'users',
+          name: 'admin-users',
+          component: AdminUserManageView,
+          meta: { title: '用户管理', adminRequired: true },
+        },
+        {
+          path: 'diaries',
+          name: 'admin-diaries',
+          component: AdminDiaryManageView,
+          meta: { title: '日记管理', adminRequired: true },
+        },
+      ],
     },
     {
       path: '/',
@@ -71,12 +107,6 @@ const router = createRouter({
           component: StatisticsView,
           meta: { title: '情绪统计' },
         },
-        {
-          path: 'admin',
-          name: 'admin',
-          component: AdminView,
-          meta: { title: '后台管理' },
-        },
       ],
     },
   ],
@@ -85,10 +115,32 @@ const router = createRouter({
 /**
  * 全局路由守卫。
  *
- * 访问登录和注册页不需要 token；访问其他系统页面时，如果本地没有 token，
- * 就跳转到登录页，并把原目标地址放到 redirect 参数里。
+ * 普通用户端检查 token；后台管理端检查 adminToken。两个登录状态互不复用，
+ * 避免普通用户登录后误进入后台页面。
  */
 router.beforeEach((to) => {
+  const isAdminPage = to.path.startsWith('/admin') || to.meta.adminRequired === true
+  const isAdminPublicPage = to.meta.adminPublic === true
+
+  if (isAdminPage) {
+    const adminToken = localStorage.getItem('adminToken')
+
+    if (!adminToken && !isAdminPublicPage) {
+      return {
+        path: '/admin/login',
+        query: {
+          redirect: to.fullPath,
+        },
+      }
+    }
+
+    if (adminToken && to.path === '/admin/login') {
+      return '/admin/dashboard'
+    }
+
+    return true
+  }
+
   const token = localStorage.getItem('token')
   const isPublicPage = to.meta.public === true
 

@@ -40,7 +40,6 @@ const menuItems = [
   { path: '/history', label: '历史记录' },
   { path: '/chat', label: 'AI陪伴' },
   { path: '/statistics', label: '情绪统计' },
-  { path: '/admin', label: '后台管理' },
 ]
 
 /**

@@ -1,6 +1,7 @@
 package com.bishe.backend.config;
 
 import com.bishe.backend.security.JwtInterceptor;
+import com.bishe.backend.security.AdminAuthInterceptor;
 import jakarta.annotation.Resource;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -22,6 +23,12 @@ public class WebMvcConfig implements WebMvcConfigurer {
     private JwtInterceptor jwtInterceptor;
 
     /**
+     * 管理员权限拦截器。
+     */
+    @Resource
+    private AdminAuthInterceptor adminAuthInterceptor;
+
+    /**
      * 注册拦截器并放行登录注册接口。
      *
      * @param registry Spring MVC 拦截器注册器
@@ -30,6 +37,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(jwtInterceptor)
                 .addPathPatterns("/**")
-                .excludePathPatterns("/user/login", "/user/register");
+                .excludePathPatterns("/user/login", "/user/register", "/admin/auth/login");
+
+        registry.addInterceptor(adminAuthInterceptor)
+                .addPathPatterns("/admin/**")
+                .excludePathPatterns("/admin/auth/login");
     }
 }
