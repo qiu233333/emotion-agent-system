@@ -11,6 +11,7 @@ declare module '@/utils/todayStorage' {
     title: string
     content: string
     moodTag: string
+    selfScore?: number
   }
 
   /**
@@ -19,6 +20,8 @@ declare module '@/utils/todayStorage' {
   export interface ChatHistoryMessage {
     role: 'user' | 'assistant'
     content: string
+    emotionType?: string
+    riskFlag?: boolean
   }
 
   /**

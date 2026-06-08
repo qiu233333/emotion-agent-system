@@ -10,3 +10,5 @@ codex操作思路.docx
 .m2/
 .m2repo/
 .env
+.env.docker
+docker-compose.override.yml

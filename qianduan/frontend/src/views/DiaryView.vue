@@ -2,10 +2,10 @@
 /**
  * 情绪日记页面。
  *
- * 当前页面提供新增日记表单，用户填写标题、内容和心情标签后，
- * 点击提交会调用后端 POST /api/diary 接口保存数据。
+ * 当前页面承载用户端最核心的记录流程：填写日记、选择心情标签、
+ * 做一次自我强度标记，保存后展示后端情绪分析结果和 AI 建议。
  */
-import { onMounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 
 import { generateAiSuggestion } from '@/api/ai'
@@ -16,31 +16,24 @@ import {
   removeTodayDiaryDraft,
   saveTodayDiaryDraft,
 } from '@/utils/todayStorage'
+import {
+  formatText,
+  getEmotionTypeLabel,
+  getPolarityLabel,
+  getPolarityTagType,
+  normalizeEmotionScore,
+  type DiaryRecord,
+  type Result,
+} from '@/utils/emotion'
 
 /**
- * 后端统一 Result 响应结构。
+ * 今日未提交日记草稿结构。
  */
-interface Result<T = unknown> {
-  code: number
-  message?: string
-  data?: T
-}
-
-/**
- * 情绪日记保存后返回的数据结构。
- */
-interface DiaryRecord {
-  id?: number
+interface DiaryDraft {
   title?: string
   content?: string
   moodTag?: string
-  emotionPolarity?: string
-  emotionType?: string
-  emotionScore?: number
-  keywords?: string
-  aiSummary?: string
-  aiSuggestion?: string
-  diaryDate?: string
+  selfScore?: number
 }
 
 /**
@@ -57,6 +50,7 @@ const diaryForm = reactive({
   title: '',
   content: '',
   moodTag: '',
+  selfScore: 3,
 })
 
 // 提交按钮 loading 状态，避免用户连续重复提交。
@@ -68,13 +62,41 @@ const savedDiary = ref<DiaryRecord | null>(null)
 // 生成 AI 建议按钮 loading 状态。
 const suggestionLoading = ref(false)
 
+// 常用心情标签，帮助用户快速开始记录。
+const moodOptions = ['开心', '平静', '焦虑', '疲惫', '低落', '期待', '烦躁', '放松']
+
+// 日记正文字数，用于给用户提供轻量反馈。
+const contentLength = computed(() => diaryForm.content.trim().length)
+
+// 当前表单是否有本地草稿内容。
+const hasDraftContent = computed(() => hasDiaryDraftContent())
+
+/**
+ * 判断本地读取的对象是否是合法日记草稿。
+ *
+ * @param draft 待判断草稿对象
+ * @returns 草稿字段结构合法时返回 true
+ */
+function isDiaryDraft(draft: unknown): draft is DiaryDraft {
+  return Boolean(draft && typeof draft === 'object')
+}
+
 /**
  * 判断当前日记表单是否包含有效草稿内容。
  *
- * @returns 标题、内容或心情标签任意一项非空时返回 true
+ * @returns 标题、内容、心情标签任意一项非空时返回 true
  */
 function hasDiaryDraftContent() {
   return Boolean(diaryForm.title.trim() || diaryForm.content.trim() || diaryForm.moodTag.trim())
+}
+
+/**
+ * 选择一个快捷心情标签。
+ *
+ * @param moodTag 用户选择的心情标签
+ */
+function selectMoodTag(moodTag: string) {
+  diaryForm.moodTag = moodTag
 }
 
 /**
@@ -84,13 +106,14 @@ function hasDiaryDraftContent() {
  */
 function restoreTodayDiaryDraft() {
   const draft = readTodayDiaryDraft()
-  if (!draft) {
+  if (!isDiaryDraft(draft)) {
     return
   }
 
   diaryForm.title = draft.title || ''
   diaryForm.content = draft.content || ''
   diaryForm.moodTag = draft.moodTag || ''
+  diaryForm.selfScore = draft.selfScore || 3
 }
 
 /**
@@ -108,6 +131,7 @@ function syncTodayDiaryDraft() {
     title: diaryForm.title,
     content: diaryForm.content,
     moodTag: diaryForm.moodTag,
+    selfScore: diaryForm.selfScore,
   })
 }
 
@@ -120,48 +144,8 @@ function resetDiaryForm() {
   diaryForm.title = ''
   diaryForm.content = ''
   diaryForm.moodTag = ''
+  diaryForm.selfScore = 3
   removeTodayDiaryDraft()
-}
-
-/**
- * 获取情绪极性的中文展示文本。
- *
- * @param polarity 后端返回的情绪极性
- * @returns 中文极性名称
- */
-function getPolarityLabel(polarity?: string) {
-  const polarityMap: Record<string, string> = {
-    positive: '积极',
-    negative: '消极',
-    neutral: '平静',
-  }
-  return polarity ? polarityMap[polarity] || polarity : '暂无'
-}
-
-/**
- * 获取情绪极性的标签类型。
- *
- * @param polarity 后端返回的情绪极性
- * @returns Element Plus 标签类型
- */
-function getPolarityTagType(polarity?: string) {
-  if (polarity === 'positive') {
-    return 'success'
-  }
-  if (polarity === 'negative') {
-    return 'danger'
-  }
-  return 'info'
-}
-
-/**
- * 格式化空文本。
- *
- * @param text 待展示文本
- * @returns 非空文本或占位符
- */
-function formatText(text?: string) {
-  return text || '暂无'
 }
 
 /**
@@ -219,12 +203,12 @@ async function generateSuggestionForSavedDiary() {
 
     if (result.code === 200) {
       savedDiary.value.aiSuggestion = result.data?.aiSuggestion || ''
-      ElMessage.success(result.data?.saved ? 'AI建议已生成并保存' : 'AI建议已生成')
+      ElMessage.success(result.data?.saved ? 'AI 建议已生成并保存' : 'AI 建议已生成')
     } else {
-      ElMessage.error(result.message || '生成AI建议失败')
+      ElMessage.error(result.message || '生成 AI 建议失败')
     }
   } catch (error) {
-    ElMessage.error('生成AI建议失败')
+    ElMessage.error('生成 AI 建议失败')
   } finally {
     suggestionLoading.value = false
   }
@@ -243,7 +227,7 @@ onMounted(() => {
 /**
  * 监听日记表单变化并自动保存今日草稿。
  *
- * 用户填写标题、内容或心情标签后，切换页面或刷新仍可恢复当天内容。
+ * 用户填写标题、内容、心情标签或自评分后，切换页面或刷新仍可恢复当天内容。
  */
 watch(diaryForm, () => {
   syncTodayDiaryDraft()
@@ -251,116 +235,357 @@ watch(diaryForm, () => {
 </script>
 
 <template>
-  <!-- 情绪日记页：提供新增日记的基础表单。 -->
-  <el-card class="page-card">
-    <h2 class="page-title">情绪日记</h2>
-    <p class="page-description">记录今天发生的事情、心情标签和情绪感受，提交后会保存到后端数据库。</p>
+  <!-- 情绪日记页：围绕“记录 -> 保存 -> 分析 -> 建议”构建输入闭环。 -->
+  <section class="diary-page">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">写一篇情绪日记</h1>
+        <p class="page-description">把当下写清楚一点，之后回看时会更容易理解自己的变化。</p>
+      </div>
+      <el-tag :type="hasDraftContent ? 'warning' : 'info'" effect="plain">
+        {{ hasDraftContent ? '今日草稿已保存' : '今日草稿为空' }}
+      </el-tag>
+    </div>
 
-    <el-form class="diary-form" label-width="90px">
-      <el-form-item label="标题">
-        <el-input v-model="diaryForm.title" placeholder="请输入日记标题" />
-      </el-form-item>
+    <div class="diary-grid">
+      <section class="soft-panel diary-form-panel">
+        <el-form class="diary-form" label-position="top">
+          <el-form-item label="标题">
+            <el-input v-model="diaryForm.title" size="large" placeholder="给今天的感受起一个名字" />
+          </el-form-item>
 
-      <el-form-item label="内容">
-        <el-input
-          v-model="diaryForm.content"
-          placeholder="请输入今天的情绪日记内容"
-          type="textarea"
-          :rows="6"
-        />
-      </el-form-item>
+          <el-form-item label="心情标签">
+            <div class="mood-picker">
+              <button
+                v-for="mood in moodOptions"
+                :key="mood"
+                class="mood-chip"
+                :class="{ active: diaryForm.moodTag === mood }"
+                type="button"
+                @click="selectMoodTag(mood)"
+              >
+                {{ mood }}
+              </button>
+            </div>
+            <el-input v-model="diaryForm.moodTag" placeholder="也可以自己输入一个标签" />
+          </el-form-item>
 
-      <el-form-item label="心情标签">
-        <el-input v-model="diaryForm.moodTag" placeholder="例如：开心、焦虑、平静" />
-      </el-form-item>
+          <el-form-item label="自我感受强度">
+            <div class="score-picker">
+              <el-rate v-model="diaryForm.selfScore" />
+              <span>{{ diaryForm.selfScore }}/5</span>
+            </div>
+          </el-form-item>
 
-      <el-form-item>
-        <el-button type="primary" :loading="submitLoading" @click="submitDiary">提交</el-button>
-        <el-button @click="resetDiaryForm">清空</el-button>
-      </el-form-item>
-    </el-form>
+          <el-form-item label="内容">
+            <el-input
+              v-model="diaryForm.content"
+              class="diary-textarea"
+              placeholder="发生了什么？你当时最明显的感受是什么？"
+              type="textarea"
+              :rows="10"
+            />
+            <div class="form-helper">
+              <span>{{ contentLength }} 字</span>
+              <span>系统会在保存后整理情绪类型、强度和关键词</span>
+            </div>
+          </el-form-item>
 
-    <div v-if="savedDiary" class="analysis-panel">
+          <div class="form-actions">
+            <el-button type="primary" size="large" :loading="submitLoading" @click="submitDiary">保存并分析</el-button>
+            <el-button size="large" @click="resetDiaryForm">清空</el-button>
+          </div>
+        </el-form>
+      </section>
+
+      <aside class="soft-panel writing-side">
+        <h2>今日小结</h2>
+        <dl>
+          <div>
+            <dt>当前标签</dt>
+            <dd>{{ formatText(diaryForm.moodTag, '未选择') }}</dd>
+          </div>
+          <div>
+            <dt>自评强度</dt>
+            <dd>{{ diaryForm.selfScore }}/5</dd>
+          </div>
+          <div>
+            <dt>正文长度</dt>
+            <dd>{{ contentLength }} 字</dd>
+          </div>
+        </dl>
+        <p>不用一次写完整，先把最明确的一句话写下来也可以。</p>
+      </aside>
+    </div>
+
+    <section v-if="savedDiary" class="soft-panel analysis-panel">
       <div class="analysis-header">
-        <h3>本次情绪分析</h3>
+        <div>
+          <h2>本次情绪分析</h2>
+          <p>{{ formatText(savedDiary.aiSummary, '分析结果已生成。') }}</p>
+        </div>
         <div class="analysis-actions">
           <el-tag :type="getPolarityTagType(savedDiary.emotionPolarity)" effect="plain">
             {{ getPolarityLabel(savedDiary.emotionPolarity) }}
           </el-tag>
           <el-button size="small" type="primary" :loading="suggestionLoading" @click="generateSuggestionForSavedDiary">
-            生成AI建议
+            生成 AI 建议
           </el-button>
         </div>
       </div>
 
-      <el-descriptions :column="2" border class="analysis-descriptions">
-        <el-descriptions-item label="情绪类型">
-          <el-tag type="warning" effect="plain">{{ formatText(savedDiary.emotionType) }}</el-tag>
-        </el-descriptions-item>
-        <el-descriptions-item label="情绪强度">
-          <div class="score-cell">
-            <el-rate :model-value="savedDiary.emotionScore || 0" disabled />
-            <span>{{ savedDiary.emotionScore || 0 }}/5</span>
-          </div>
-        </el-descriptions-item>
-        <el-descriptions-item label="关键词" :span="2">
-          {{ formatText(savedDiary.keywords) }}
-        </el-descriptions-item>
-        <el-descriptions-item label="分析说明" :span="2">
-          {{ formatText(savedDiary.aiSummary) }}
-        </el-descriptions-item>
-        <el-descriptions-item label="AI建议" :span="2">
-          {{ formatText(savedDiary.aiSuggestion) }}
-        </el-descriptions-item>
-      </el-descriptions>
-    </div>
-  </el-card>
+      <div class="analysis-grid">
+        <div class="analysis-item">
+          <span>情绪类型</span>
+          <strong>{{ getEmotionTypeLabel(savedDiary.emotionType) }}</strong>
+        </div>
+        <div class="analysis-item">
+          <span>系统强度</span>
+          <strong>{{ normalizeEmotionScore(savedDiary.emotionScore) }}/5</strong>
+        </div>
+        <div class="analysis-item wide">
+          <span>关键词</span>
+          <p>{{ formatText(savedDiary.keywords) }}</p>
+        </div>
+        <div class="analysis-item wide calm">
+          <span>AI 建议</span>
+          <p>{{ formatText(savedDiary.aiSuggestion, '可以点击右上角按钮生成建议。') }}</p>
+        </div>
+      </div>
+    </section>
+  </section>
 </template>
 
 <style scoped>
-/* 日记表单保持适中的宽度，方便阅读和填写。 */
+/* 日记页面整体：表单和分析区纵向排列。 */
+.diary-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 日记主体：大表单和右侧小结并排。 */
+.diary-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 18px;
+}
+
+.diary-form-panel {
+  padding: 24px;
+}
+
 .diary-form {
-  max-width: 720px;
-  margin-top: 24px;
+  max-width: 820px;
 }
 
-/* 分析结果区域：展示后端保存日记时自动生成的 NLP 情绪分析结果。 */
-.analysis-panel {
-  margin-top: 28px;
-  max-width: 880px;
+/* 心情快捷标签：按钮尺寸稳定，方便快速选择。 */
+.mood-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
 }
 
-/* 分析标题行：左侧标题，右侧展示情绪极性标签。 */
-.analysis-header {
+.mood-chip {
+  min-width: 64px;
+  padding: 8px 12px;
+  border: 1px solid #d7e5e2;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #415b56;
+  cursor: pointer;
+}
+
+.mood-chip.active,
+.mood-chip:hover {
+  border-color: #1f9d8a;
+  background: #e6f6f3;
+  color: #126253;
+  font-weight: 700;
+}
+
+/* 自评强度：星级和数值横向展示。 */
+.score-picker {
   display: flex;
   align-items: center;
+  gap: 12px;
+  min-height: 32px;
+}
+
+.score-picker span {
+  color: #5d706c;
+  font-weight: 700;
+}
+
+.diary-textarea {
+  width: 100%;
+}
+
+.form-helper {
+  display: flex;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 14px;
+  width: 100%;
+  margin-top: 8px;
+  color: #768b86;
+  font-size: 12px;
 }
 
-.analysis-header h3 {
-  margin: 0;
-  color: #111827;
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+/* 右侧小结：实时展示用户输入状态。 */
+.writing-side {
+  align-self: start;
+  padding: 22px;
+}
+
+.writing-side h2 {
+  margin: 0 0 16px;
+  color: #173934;
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 800;
 }
 
-/* 分析操作区：放置情绪极性标签和生成 AI 建议按钮。 */
+.writing-side dl {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+
+.writing-side dl > div {
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e8efed;
+}
+
+.writing-side dt {
+  color: #738681;
+  font-size: 13px;
+}
+
+.writing-side dd {
+  margin: 5px 0 0;
+  color: #173934;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.writing-side p {
+  margin: 18px 0 0;
+  color: #607671;
+  line-height: 1.8;
+}
+
+/* 分析结果面板：保存成功后显示系统分析和 AI 建议。 */
+.analysis-panel {
+  padding: 24px;
+}
+
+.analysis-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.analysis-header h2 {
+  margin: 0;
+  color: #173934;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.analysis-header p {
+  margin: 6px 0 0;
+  color: #667a75;
+  line-height: 1.7;
+}
+
 .analysis-actions {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 10px;
 }
 
-/* 情绪强度展示：星级和数字并排显示。 */
-.score-cell {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.analysis-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
 }
 
-.analysis-descriptions {
-  max-width: 880px;
+.analysis-item {
+  min-height: 108px;
+  padding: 16px;
+  border: 1px solid #e5efec;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.analysis-item.wide {
+  grid-column: 1 / -1;
+}
+
+.analysis-item.calm {
+  background: #f2fbf8;
+}
+
+.analysis-item span {
+  display: block;
+  color: #71837f;
+  font-size: 13px;
+}
+
+.analysis-item strong {
+  display: block;
+  margin-top: 8px;
+  color: #173934;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.analysis-item p {
+  margin: 8px 0 0;
+  color: #4e625d;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 900px) {
+  /* 中等屏下表单和右侧小结改为单列。 */
+  .diary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .writing-side {
+    align-self: stretch;
+  }
+}
+
+@media (max-width: 640px) {
+  /* 小屏下表单间距和分析网格收紧。 */
+  .diary-form-panel,
+  .analysis-panel,
+  .writing-side {
+    padding: 18px;
+  }
+
+  .analysis-header {
+    flex-direction: column;
+  }
+
+  .analysis-actions {
+    justify-content: flex-start;
+  }
+
+  .analysis-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

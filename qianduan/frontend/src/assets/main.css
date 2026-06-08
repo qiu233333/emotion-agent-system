@@ -10,8 +10,8 @@ body,
 /* 全局页面背景和默认字体。 */
 body {
   margin: 0;
-  background: #f5f7fb;
-  color: #1f2937;
+  background: #f4fbfa;
+  color: #203330;
   font-family:
     Inter,
     "PingFang SC",
@@ -35,23 +35,89 @@ a {
   color: inherit;
 }
 
-/* 页面内容卡片：各业务页面复用这一基础样式。 */
-.page-card {
-  border-radius: 8px;
-}
-
-/* 页面标题：用于 views 目录下的静态页面标题。 */
+/* 页面标题：用于 views 目录下的业务页面标题。 */
 .page-title {
-  margin: 0 0 10px;
-  color: #111827;
-  font-size: 26px;
+  margin: 0;
+  color: #14312d;
+  font-size: 28px;
+  font-weight: 800;
   line-height: 1.3;
 }
 
-/* 页面说明文字：用于解释当前页面后续承载的业务功能。 */
+/* 页面说明文字：用于补充当前页面的轻量上下文。 */
 .page-description {
-  margin: 0;
-  color: #6b7280;
+  margin: 8px 0 0;
+  color: #667a75;
   font-size: 15px;
   line-height: 1.8;
+}
+
+/* 页面头部：统一承载标题和页面级操作。 */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+/* 柔和内容面板：用于承载表单、列表和图表等主要业务内容。 */
+.soft-panel {
+  border: 1px solid rgba(109, 132, 126, 0.16);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 18px 40px rgba(63, 95, 88, 0.08);
+}
+
+/* 重复统计卡片：用于首页和统计页面的小块指标。 */
+.metric-card {
+  min-height: 112px;
+  padding: 18px;
+  border: 1px solid rgba(112, 139, 132, 0.14);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.metric-card span {
+  display: block;
+  color: #6c807b;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.metric-card strong {
+  display: block;
+  margin-top: 8px;
+  color: #12342f;
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.metric-card small {
+  display: block;
+  margin-top: 8px;
+  color: #7b8c88;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* 标签行：多个情绪标签或关键词并排展示。 */
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+@media (max-width: 640px) {
+  /* 小屏页面头部纵向排列，避免操作按钮挤压标题。 */
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .page-title {
+    font-size: 24px;
+  }
 }
